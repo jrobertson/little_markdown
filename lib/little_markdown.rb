@@ -4,6 +4,12 @@
 
 require 'rexle'
 
+# The following HTML types are handled:
+#
+#   * h1, h2, h3 etc
+#   * ul, ol
+#   * img, a
+
 class LittleMarkdown
 
   attr_reader :to_html
@@ -17,16 +23,20 @@ class LittleMarkdown
     s3 = ul_parse(s2)
 
     raw_html = s3.lines.map do |line|
-      linex = replace(line) {|x| h1_parse(x)}
+      linex = replace(line) {|x| hx_parse(x)}
       linex3 = replace(linex) {|x| p_parse(x)}
 
     end.join
 
     doc = Rexle.new("<body>%s</body>" % raw_html)
     xml = doc.xml(pretty: true, declaration: 'none')
-    xml2 = replace_link(xml)
-    puts 'xml2: ' + xml2.inspect if @debug
-    @to_html = xml2.strip.lines[1..-2].map {|x| x[2..-1] }.join
+    
+
+    xml2 = replace_img(xml)
+    xml3 = replace_link(xml2)
+    puts 'xml3: ' + xml3.inspect if @debug
+    
+    @to_html = xml3.strip.lines[1..-2].map {|x| x[2..-1] }.join
     
   end
 
@@ -43,8 +53,14 @@ class LittleMarkdown
 
   end
 
-  def h1_parse(s)
-    s.sub(/^# ([^\n]+)/,'<h1>\1</h1>')
+  def hx_parse(s)
+    
+    s.sub(/^(#+) ([^\n]+)/) do |x|
+      puts 'x: ' + [$1, $2].inspect
+      hx, title = [$1, $2]
+      "<h%d>%s</h%d>" % [hx.length, title, hx.length]
+    end
+
   end
 
   def p_parse(s)
@@ -134,7 +150,31 @@ class LittleMarkdown
     end
 
   end
+  
+  def replace_img(s5)
+
+    if @debug then
+      puts 'inside replace_img'
+      puts 's5: ' + s5.inspect
+    end
+
+    s5.gsub(/\!\[([^\]]+)\]\(([^\)]+)/m) do |x|
+
+      puts 'x: ' + x.inspect if @debug
+
+      found = x.match(/\[([^\]]+)\]\(([^\)]+)/)
+      puts 'found: ' + found.inspect if @debug
+
+      if found then
+        title, src = found[1..-1] 
+        "<img src='%s' alt='%s'/>" % [src, title]
+      else
+        x
+      end
+
+    end
+
+  end  
 
 end
-
 

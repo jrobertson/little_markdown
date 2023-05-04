@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'little_markdown'
-  s.version = '0.1.0'
+  s.version = '0.1.1'
   s.summary = 'An experimental markdown parser for learning purposes.'
   s.authors = ['James Robertson']
   s.files = Dir["lib/little_markdown.rb"]
